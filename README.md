@@ -9,6 +9,7 @@ Coleção de EAs (Expert Advisors) para operação automatizada na **Nomo (MetaT
 | EURUSD   | M30       | TrendEURUSD_v1     | 260828 | 1.10   |
 | XRPUSD   | M30       | TrendXRPUSD_v1     | 300831 | 1.40   |
 | DOGEUSD  | M30       | TrendMeme_Pct_v1   | 310901 | 1.10   |
+| BTCUSD   | H1        | TrendBTCUSD_v1     | 310903 | 1.10   |
 | WTIUSD   | H1        | TrendWTIUSD_v1     | 310902 | 1.10   |
 | USDJPY   | M5        | ScalpUSDJPY_v1     | 260829 | 1.30   |
 
@@ -23,7 +24,7 @@ Coleção de EAs (Expert Advisors) para operação automatizada na **Nomo (MetaT
 
 ## Proteção de lucro (soft lock)
 
-Os Trend **EUR, XRP e WTI** usam duas fases:
+Os Trend **EUR, XRP, BTC e WTI** usam duas fases:
 
 1. **Soft lock** — lucro ≥ `SoftLockStart` → SL = entrada + `SoftLockPts`
 2. **Trailing completo** — lucro ≥ `TrailStart` → SL segue o preço
@@ -39,6 +40,7 @@ O **TrendMeme (DOGE)** também usa soft lock em **% do preço** (spread alto ~5%
 eas/
   TrendEURUSD_v1.mq5    # Trend forex, soft lock v1.10
   TrendXRPUSD_v1.mq5    # Trend crypto, soft lock v1.40
+  TrendBTCUSD_v1.mq5    # Trend BTC H1, spread ~2900 pts, soft lock v1.10
   TrendWTIUSD_v1.mq5    # Trend petróleo, soft lock v1.10
   TrendMeme_Pct_v1.mq5  # DOGE, soft lock + trailing em %
   ScalpUSDJPY_v1.mq5    # Scalp JPY, trailing em degraus
