@@ -3,9 +3,10 @@
 //| Trend/pump em % do preco (memecoin / crypto volatil)             |
 //| Defaults calibrados para DOGEUSD Nomo (spread ~4.5-5%)           |
 //| Validacao: 1 posicao, so BUY, trailing do topo + teto de lucro   |
+//| v1.10: soft lock em % antes do trailing completo                 |
 //+------------------------------------------------------------------+
 #property copyright "Vitor"
-#property version   "1.00"
+#property version   "1.10"
 #property strict
 
 //--- risco
@@ -24,6 +25,8 @@ input bool   InpOnlyBuy          = true;  // Memecoin: so compra (recomendado)
 
 //--- stops / trailing em % do PRECO (DOGE: spread ~5%)
 input double InpStopPct          = 18.0;  // SL inicial (% abaixo da entrada)
+input double InpSoftLockArmPct   = 12.0;  // Trava lucro minimo antes do trail
+input double InpSoftLockPct      = 5.0;   // SL = entrada + X% (compra)
 input double InpTrailArmPct      = 25.0;  // Arma trailing apos +X% lucro
 input double InpTrailLockPct     = 12.0;  // SL = mark * (1 - lock%) na compra
 input double InpMaxProfitPct     = 100.0; // Teto: fecha em +X% lucro
@@ -57,8 +60,9 @@ int OnInit()
 
    ResetDayIfNeeded();
 
-   Print("TrendMeme_Pct_v1 | ", _Symbol, " ", EnumToString(_Period));
-   Print("SL=", InpStopPct, "% | armTrail=+", InpTrailArmPct,
+   Print("TrendMeme_Pct_v1.10 | ", _Symbol, " ", EnumToString(_Period));
+   Print("SL=", InpStopPct, "% | softLock=+", InpSoftLockArmPct,
+         "% (+", InpSoftLockPct, "%) | armTrail=+", InpTrailArmPct,
          "% | lock=", InpTrailLockPct, "% | teto=+", InpMaxProfitPct, "%");
    Print("spreadAtual=", DoubleToString(CurrentSpreadPct(), 3),
          "% | max=", InpMaxSpreadPct, "% | onlyBuy=", InpOnlyBuy);
@@ -249,28 +253,48 @@ void ManageOpenPosition()
          }
       }
 
-      if(profitPct < InpTrailArmPct)
-         continue;
-
       double newSL = sl;
-      if(type == POSITION_TYPE_BUY)
+
+      if(profitPct >= InpSoftLockArmPct && profitPct < InpTrailArmPct)
       {
-         double desiredSL = mark * (1.0 - InpTrailLockPct / 100.0);
-         if(desiredSL > openPx)
+         if(type == POSITION_TYPE_BUY)
          {
-            if(sl == 0.0 || desiredSL > sl + point)
-               newSL = desiredSL;
+            double softSL = openPx * (1.0 + InpSoftLockPct / 100.0);
+            if(softSL > sl + point)
+               newSL = softSL;
+         }
+         else
+         {
+            double softSL = openPx * (1.0 - InpSoftLockPct / 100.0);
+            if(sl == 0.0 || softSL < sl - point)
+               newSL = softSL;
          }
       }
-      else
+
+      if(profitPct >= InpTrailArmPct)
       {
-         double desiredSL = mark * (1.0 + InpTrailLockPct / 100.0);
-         if(desiredSL < openPx)
+         if(type == POSITION_TYPE_BUY)
          {
-            if(sl == 0.0 || desiredSL < sl - point)
-               newSL = desiredSL;
+            double desiredSL = mark * (1.0 - InpTrailLockPct / 100.0);
+            if(desiredSL > openPx)
+            {
+               if(desiredSL > newSL + point)
+                  newSL = desiredSL;
+            }
+         }
+         else
+         {
+            double desiredSL = mark * (1.0 + InpTrailLockPct / 100.0);
+            if(desiredSL < openPx)
+            {
+               if(newSL == 0.0 || desiredSL < newSL - point)
+                  newSL = desiredSL;
+            }
          }
       }
+
+      if(profitPct < InpSoftLockArmPct)
+         continue;
 
       newSL = NormalizeDouble(newSL, digits);
       if(MathAbs(newSL - sl) < point)
@@ -289,8 +313,11 @@ void ManageOpenPosition()
 
       if(!OrderSend(request, result))
          Print("Falha trailing ticket=", ticket, " err=", GetLastError());
-      else
+      else if(profitPct >= InpTrailArmPct)
          Print("TRAIL +", DoubleToString(profitPct, 2), "% SL ",
+               DoubleToString(sl, digits), "->", DoubleToString(newSL, digits));
+      else
+         Print("SOFT +", DoubleToString(profitPct, 2), "% SL ",
                DoubleToString(sl, digits), "->", DoubleToString(newSL, digits));
    }
 }
@@ -493,7 +520,7 @@ bool OpenTrade(ENUM_ORDER_TYPE type)
    request.tp = 0.0;
    request.deviation = 80;
    request.magic = InpMagic;
-   request.comment = "TrendMeme_Pct_v1";
+   request.comment = "TrendMeme_Pct_v1.10";
    request.type_filling = ResolveFilling();
 
    if(!OrderSend(request, result))
