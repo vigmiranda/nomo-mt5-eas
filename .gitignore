@@ -1,0 +1,19 @@
+# MetaTrader / MQL5 build artifacts
+*.ex5
+*.log
+
+# MetaEditor backups
+*.bak
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives (source is the .mq5 files)
+*.zip
+
+# Legacy duplicate folder (canonical copy is in eas/)
+EA_Nomo_4robos/
+
+# Root-level duplicates kept for local dev only
+/*.mq5

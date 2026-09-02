@@ -1,0 +1,47 @@
+# Nomo MT5 — Expert Advisors
+
+Coleção de EAs (Expert Advisors) para operação automatizada na **Nomo (MetaTrader 5)**.
+
+## Layout operacional
+
+| Par      | Timeframe | EA                 | Magic  | Versão |
+|----------|-----------|--------------------|--------|--------|
+| EURUSD   | M30       | TrendEURUSD_v1     | 260828 | 1.10   |
+| XRPUSD   | M30       | TrendXRPUSD_v1     | 300831 | 1.40   |
+| DOGEUSD  | M30       | TrendMeme_Pct_v1   | 310901 | 1.00   |
+| WTIUSD   | H1        | TrendWTIUSD_v1     | 310902 | 1.10   |
+| USDJPY   | M5        | ScalpUSDJPY_v1     | 260829 | 1.30   |
+
+## Instalação
+
+1. Copie os arquivos `.mq5` de `eas/` para:
+   `MetaTrader 5/MQL5/Experts/`
+2. Abra o **MetaEditor**, compile cada EA (**F7** → 0 erros).
+3. No gráfico correto (par + timeframe): arraste o EA compilado.
+4. Ative **Permitir algotrading** e confirme o botão verde no terminal.
+5. Verifique o log **Experts** na inicialização (versão e parâmetros).
+
+## Proteção de lucro (soft lock)
+
+Os Trend **EUR, XRP e WTI** usam duas fases:
+
+1. **Soft lock** — lucro ≥ `SoftLockStart` → SL = entrada + `SoftLockPts`
+2. **Trailing completo** — lucro ≥ `TrailStart` → SL segue o preço
+
+O **TrendMeme (DOGE)** trabalha em **% do preço** (spread alto ~5%).
+
+## Estrutura
+
+```
+eas/
+  TrendEURUSD_v1.mq5    # Trend forex, soft lock v1.10
+  TrendXRPUSD_v1.mq5    # Trend crypto, soft lock v1.40
+  TrendWTIUSD_v1.mq5    # Trend petróleo, soft lock v1.10
+  TrendMeme_Pct_v1.mq5  # DOGE, stops em %
+  ScalpUSDJPY_v1.mq5    # Scalp JPY, trailing em degraus
+  archive/              # EAs legados (não usados no layout atual)
+```
+
+## Aviso
+
+Estes EAs são ferramentas de automação. Teste em demo antes de usar em conta real. Parâmetros de spread/stop variam entre demo e produção — especialmente **XRP** e **DOGE**.
